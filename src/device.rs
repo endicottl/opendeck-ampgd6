@@ -26,7 +26,10 @@ pub async fn device_task(candidate: CandidateDevice, token: CancellationToken) {
         // Try to set brightness - some devices may not support this command
         log::info!("Setting brightness...");
         if let Err(e) = device.set_brightness(50).await {
-            log::warn!("Failed to set brightness (this may be normal for this device): {}", e);
+            log::warn!(
+                "Failed to set brightness (this may be normal for this device): {}",
+                e
+            );
             // Continue anyway - brightness setting might not be supported
         } else {
             log::info!("Brightness set successfully");
@@ -35,7 +38,10 @@ pub async fn device_task(candidate: CandidateDevice, token: CancellationToken) {
         // Try to clear all button images - some devices may not support this command
         log::info!("Clearing all button images...");
         if let Err(e) = device.clear_all_button_images().await {
-            log::warn!("Failed to clear all button images (this may be normal for this device): {}", e);
+            log::warn!(
+                "Failed to clear all button images (this may be normal for this device): {}",
+                e
+            );
             // Continue anyway - clearing might not be supported or needed
         } else {
             log::info!("Button images cleared successfully");
@@ -44,7 +50,10 @@ pub async fn device_task(candidate: CandidateDevice, token: CancellationToken) {
         // Try to flush - some devices may not need this
         log::info!("Flushing device...");
         if let Err(e) = device.flush().await {
-            log::warn!("Failed to flush device (this may be normal for this device): {}", e);
+            log::warn!(
+                "Failed to flush device (this may be normal for this device): {}",
+                e
+            );
             // Continue anyway
         } else {
             log::info!("Device flushed successfully");
@@ -150,11 +159,16 @@ async fn device_events_task(candidate: &CandidateDevice) -> Result<(), MirajazzE
     log::info!("Connecting to {} for incoming events", candidate.id);
 
     let devices_lock = DEVICES.read().await;
-    let reader = match devices_lock.get(&candidate.id) {
+    let mut reader = match devices_lock.get(&candidate.id) {
         Some(device) => device.get_reader(crate::inputs::process_input),
         None => return Ok(()),
     };
     drop(devices_lock);
+
+    // Force event reader to use protocol 3 while keeping device write protocol unchanged.
+    if let Some(reader_mut) = std::sync::Arc::get_mut(&mut reader) {
+        reader_mut.protocol_version = 3;
+    }
 
     log::info!("Connected to {} for incoming events", candidate.id);
 
@@ -163,7 +177,7 @@ async fn device_events_task(candidate: &CandidateDevice) -> Result<(), MirajazzE
     // Track last processed event to avoid duplicates
     use std::collections::HashSet;
     use std::time::{Duration, Instant};
-    
+
     #[derive(Hash, PartialEq, Eq, Clone, Copy)]
     enum EventKey {
         ButtonDown(u8),
@@ -172,7 +186,7 @@ async fn device_events_task(candidate: &CandidateDevice) -> Result<(), MirajazzE
         EncoderUp(u8),
         EncoderTwist(u8, i16),
     }
-    
+
     let mut last_events: HashSet<(EventKey, Instant)> = HashSet::new();
     let dedup_window = Duration::from_millis(500); // 500ms window for deduplication
 
@@ -203,7 +217,9 @@ async fn device_events_task(candidate: &CandidateDevice) -> Result<(), MirajazzE
                 DeviceStateUpdate::ButtonUp(key) => EventKey::ButtonUp(*key),
                 DeviceStateUpdate::EncoderDown(enc) => EventKey::EncoderDown(*enc),
                 DeviceStateUpdate::EncoderUp(enc) => EventKey::EncoderUp(*enc),
-                DeviceStateUpdate::EncoderTwist(enc, val) => EventKey::EncoderTwist(*enc, *val as i16),
+                DeviceStateUpdate::EncoderTwist(enc, val) => {
+                    EventKey::EncoderTwist(*enc, *val as i16)
+                }
             };
 
             // Check for duplicates (same event type and key/encoder within the dedup window)
