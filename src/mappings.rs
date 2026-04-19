@@ -15,16 +15,19 @@ pub const ENCODER_COUNT: usize = 0;
 #[derive(Debug, Clone)]
 pub enum Kind {
     AMPGD6,
+    AMPGD6REV2,
 }
 
 pub const FIFINE_VID: u16 = 0x3142;
 pub const AMPGD6_PID: u16 = 0x0007;
-
+pub const AMPGD6_REV2_PID: u16 = 0x0060; //Calling this Rev2. The box and label say it's a D6
+                        
 // Map all queries to usage page 65440 and usage id 1 for now
 pub const AMPGD6_QUERY: DeviceQuery = DeviceQuery::new(65440, 1, FIFINE_VID, AMPGD6_PID);
-
-pub const QUERIES: [DeviceQuery; 1] = [
+pub const AMPGD6_REV2_QUERY: DeviceQuery = DeviceQuery::new(65440, 1, FIFINE_VID, AMPGD6_REV2_PID);
+pub const QUERIES: [DeviceQuery; 2] = [
     AMPGD6_QUERY,
+    AMPGD6_REV2_QUERY,
 ];
 
 /// Returns correct image format for device kind and key
@@ -50,6 +53,7 @@ impl Kind {
         match vid {
             FIFINE_VID => match pid {
                 AMPGD6_PID => Some(Kind::AMPGD6),
+                AMPGD6_REV2_PID => Some(Kind::AMPGD6REV2),
                 _ => None,
             },
             _ => None,
@@ -60,6 +64,7 @@ impl Kind {
     pub fn protocol_version(&self) -> usize {
         match self {
             Self::AMPGD6 => 1, // Back to version 1 - the error might be related to button count or initialization
+            Self::AMPGD6REV2 => 2, //Protocol 1 displays nothing. 
         }
     }
 
@@ -68,6 +73,7 @@ impl Kind {
     pub fn human_name(&self) -> String {
         match &self {
             Self::AMPGD6 => "FIFINE Ampligame D6",
+            Self::AMPGD6REV2 => "FIFINE Apligame D6 Rev. 2",
         }
         .to_string()
     }
@@ -77,6 +83,7 @@ impl Kind {
     pub fn id_suffix(&self) -> String {
         match &self {
             Self::AMPGD6 => "AMPGD6",
+            Self::AMPGD6REV2 => "AMPGD6REV2",
         }
         .to_string()
     }

@@ -1,4 +1,8 @@
-# udev rules for FIFINE Ampligame D6
+# udev rules for FIFINE Ampligame D6 (Revision 1)
 SUBSYSTEM=="usb", ATTRS{idVendor}=="3142", ATTRS{idProduct}=="0007", MODE="0660", TAG+="uaccess"
 
 KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3142", ATTRS{idProduct}=="0007", MODE="0660", TAG+="uaccess"
+
+# udev rules for FIFINE Ampligame D6 (Revision 2 - HOTSPOTEK)
+SUBSYSTEM=="usb", ATTRS{idVendor}=="3142", ATTRS{idProduct}=="0060", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3142", ATTRS{idProduct}=="0060", MODE="0660", TAG+="uaccess"
