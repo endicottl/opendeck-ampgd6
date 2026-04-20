@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2] - 2026-04-19
+
+### 🐛 Bug Fixes
+
+- Fix ghost click on profile switch by forcing the event reader to protocol v3 and reading the actual key state byte instead of emitting a synthetic down+up pair (thanks @theGENreel, #3)
+- Sync manifest.json version with Cargo.toml
+
 ## [0.2.1] - 2026-02-23
 
 ### 🚀 Features
